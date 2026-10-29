@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ArrowRight, Cake, Gem, Gift, Heart, Leaf, PackageCheck, PartyPopper, Sparkles, Star, Truck } from 'lucide-react';
-import { hampers, IMG } from '../data';
+import { hampers as defaultHampers, IMG } from '../data';
 import { useShop } from '../store';
 import { ProductCard, Reveal, SectionTitle, Stars } from '../components/ui';
 
@@ -13,10 +13,11 @@ const hamperCats = [
 ];
 
 export default function Hampers() {
-  const { go, setCustomOpen, showToast } = useShop();
+  const { go, setCustomOpen, showToast, hampers: dynamicHampers } = useShop();
+  const currentHampers = dynamicHampers.length ? dynamicHampers : defaultHampers;
   const [activeCat, setActiveCat] = useState<string | null>(null);
 
-  const list = useMemo(() => activeCat ? hampers.filter(h => h.occasions.includes(activeCat)) : hampers, [activeCat]);
+  const list = useMemo(() => activeCat ? currentHampers.filter(h => h.occasions.includes(activeCat)) : currentHampers, [activeCat, currentHampers]);
 
   return (
     <main>
@@ -48,34 +49,19 @@ export default function Hampers() {
         </div>
       </section>
 
-      {/* ================= CATEGORY STRIP ================= */}
-      <section className="mx-auto max-w-7xl px-4 pt-8 md:px-8">
-        <Reveal>
-          <div className="grid grid-cols-2 overflow-hidden rounded-3xl border border-rose-100 bg-white/70 sm:grid-cols-5">
-            {hamperCats.map((c, i) => (
-              <button key={c.name} onClick={() => setActiveCat(activeCat === c.name ? null : c.name)}
-                className={`group flex flex-col items-center gap-2.5 px-3 py-6 transition-all duration-300 hover:bg-blush ${i !== 0 ? 'border-l border-rose-100/70' : ''} ${activeCat === c.name ? 'bg-blush' : ''}`}>
-                <span className={`grid h-14 w-14 place-items-center rounded-full transition-all duration-400 group-hover:scale-110 group-hover:-rotate-6 ${activeCat === c.name ? 'bg-rose text-white shadow-lg shadow-rose/40' : 'bg-blush text-rose'}`}>
-                  <c.icon size={23} strokeWidth={1.6} />
-                </span>
-                <span className={`text-[12px] font-semibold transition group-hover:text-rose ${activeCat === c.name ? 'text-rose' : 'text-choco'}`}>{c.name}</span>
-                {activeCat === c.name && <span className="text-[10px] font-medium text-rose">Tap again to clear</span>}
-              </button>
-            ))}
-          </div>
-        </Reveal>
+      {/* ================= CATEGORIES ================= */}
+      <section className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button onClick={() => setActiveCat(null)} className={`pill-btn flex items-center gap-2 rounded-full border px-5 py-2.5 text-[13px] font-semibold ${activeCat === null ? 'active' : 'border-rose-200 bg-white text-choco'}`}><span>All Hampers</span></button>
+          {hamperCats.map(c => (
+            <button key={c.name} onClick={() => setActiveCat(c.name)} className={`pill-btn flex items-center gap-2 rounded-full border px-5 py-2.5 text-[13px] font-semibold ${activeCat === c.name ? 'active' : 'border-rose-200 bg-white text-choco'}`}><c.icon size={15} /><span>{c.name}</span></button>
+          ))}
+        </div>
       </section>
 
-      {/* ================= POPULAR HAMPERS ================= */}
-      <section className="mx-auto max-w-7xl px-4 py-12 md:px-8">
-        <Reveal>
-          <div className="relative">
-            <SectionTitle eyebrow="OUR HAMPERS" title="Our Popular Hampers" />
-            <button onClick={() => { setActiveCat(null); window.scrollTo({ top: 600, behavior: 'smooth' }); }} className="btn-anim btn-outline absolute right-0 top-1/2 hidden -translate-y-1/2 items-center gap-2 rounded-full px-5 py-2.5 text-[12px] font-semibold md:flex"><span>View All Hampers</span><ArrowRight size={14} /></button>
-          </div>
-          <p className="mx-auto mt-3 max-w-md text-center text-[13px] leading-relaxed text-choco/60">Handpicked with love, these hampers are perfect for making every occasion extra special.</p>
-        </Reveal>
-        <div className="mt-9 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4" key={activeCat ?? 'all'}>
+      {/* ================= HAMPER GRID ================= */}
+      <section className="mx-auto max-w-7xl px-4 pb-12 md:px-8">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {list.map((p, i) => (
             <div key={p.id} className="anim-fade-up" style={{ animationDelay: `${i * 70}ms` }}><ProductCard p={p} /></div>
           ))}

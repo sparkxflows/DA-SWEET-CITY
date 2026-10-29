@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, BadgeCheck, CakeSlice, Check, Clock3, Heart, Leaf, Minus, Plus, Search, ShoppingCart, Sparkles, Trash2, Truck, X } from 'lucide-react';
-import { allProducts, inr, weightMultiplier, weights } from '../data';
+import { inr, weightMultiplier, weights } from '../data';
 import { useShop } from '../store';
 import { Stars } from './ui';
 
@@ -37,8 +37,10 @@ export function QuickViewModal() {
   const mult = p.type === 'cake' ? (weightMultiplier[weight] ?? 1) : 1;
   const price = p.price * mult;
   const isW = wished(p.id);
+  const isOutOfStock = p.inStock === false;
 
   const doAdd = (openCart = false) => {
+    if (isOutOfStock) return;
     addToCart(p, weight, qty, true);
     setBurst(b => b + 1);
     if (openCart) { setQuickView(null); setCartOpen(true); }
@@ -49,9 +51,10 @@ export function QuickViewModal() {
       <CloseBtn onClose={() => setQuickView(null)} />
       <div className="grid md:grid-cols-2">
         <div className="relative overflow-hidden">
-          <img src={p.img} alt={p.name} className="h-64 w-full object-cover md:h-full md:min-h-[480px]" />
+          <img src={p.img} alt={p.name} className={`h-64 w-full object-cover md:h-full md:min-h-[480px] ${isOutOfStock ? 'opacity-70 grayscale' : ''}`} />
           <span className="anim-float absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-bold text-emerald-700 shadow"><Leaf size={13} /> 100% Eggless</span>
           {p.tag && <span className="absolute bottom-4 left-4 rounded-full bg-choco/85 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur">{p.tag}</span>}
+          {isOutOfStock && <span className="absolute left-4 top-14 rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow">Out of Stock</span>}
           <span className="absolute bottom-4 right-4 font-hand text-2xl text-white drop-shadow-[0_2px_8px_rgba(0,0,0,.5)]">Made with Love ♡</span>
         </div>
         <div className="relative p-6 md:p-7">
@@ -96,10 +99,26 @@ export function QuickViewModal() {
           </div>
 
           <div className="mt-5 flex gap-2.5">
-            <button onClick={() => doAdd(false)} className="btn-anim btn-rose flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold"><ShoppingCart size={16} /><span>Add to Cart</span></button>
+            <button
+              disabled={isOutOfStock}
+              onClick={() => doAdd(false)}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold transition ${
+                isOutOfStock ? 'bg-rose-100 text-choco/40 cursor-not-allowed' : 'btn-anim btn-rose'
+              }`}
+            >
+              <ShoppingCart size={16} /><span>{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
+            </button>
             <button onClick={() => toggleWish(p.id)} className={`heart-btn grid h-[46px] w-[46px] shrink-0 place-items-center rounded-full border-2 ${isW ? 'wished border-transparent' : 'border-rose-200 bg-white text-rose'}`} aria-label="Wishlist"><Heart size={18} fill={isW ? 'currentColor' : 'none'} /></button>
           </div>
-          <button onClick={() => doAdd(true)} className="btn-anim btn-choco mt-2.5 flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold"><span>Buy Now</span><ArrowRight size={16} /></button>
+          <button
+            disabled={isOutOfStock}
+            onClick={() => doAdd(true)}
+            className={`mt-2.5 flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold transition ${
+              isOutOfStock ? 'bg-choco/30 text-white/50 cursor-not-allowed' : 'btn-anim btn-choco'
+            }`}
+          >
+            <span>{isOutOfStock ? 'Currently Unavailable' : 'Buy Now'}</span><ArrowRight size={16} />
+          </button>
 
           <div className="mt-5 grid grid-cols-3 gap-2 border-t border-dashed border-rose-200 pt-4 text-center">
             {[{ i: Leaf, t: '100% Eggless' }, { i: Truck, t: 'On-Time Delivery' }, { i: Clock3, t: 'Baked Fresh Today' }].map((f, i) => (
@@ -115,10 +134,23 @@ export function QuickViewModal() {
 /* ---------------- Cart drawer ---------------- */
 export function CartDrawer() {
   const { cartOpen, setCartOpen, cart, updateQty, removeItem, cartTotal, placeOrder, go } = useShop();
+  const [custName, setCustName] = useState('');
+  const [custPhone, setCustPhone] = useState('');
+  const [custAddress, setCustAddress] = useState('');
+
   useEffect(() => { document.body.style.overflow = cartOpen ? 'hidden' : ''; return () => { document.body.style.overflow = ''; }; }, [cartOpen]);
   if (!cartOpen) return null;
   const freeAbove = 999;
   const progress = Math.min(100, (cartTotal / freeAbove) * 100);
+
+  const handleCheckout = () => {
+    placeOrder({
+      name: custName.trim() || 'Website Customer',
+      phone: custPhone.trim() || '98125-42172',
+      address: custAddress.trim() || 'Kaithal/Hansi',
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-[80]">
       <div className="anim-fade-in absolute inset-0 bg-choco/55 backdrop-blur-[3px]" onClick={() => setCartOpen(false)} />
@@ -164,12 +196,38 @@ export function CartDrawer() {
                   </div>
                 );
               })}
+
+              {/* Delivery Details */}
+              <div className="rounded-2xl border border-rose-100 bg-white p-3.5 space-y-2 text-xs">
+                <p className="font-semibold text-choco">Delivery Details (Optional):</p>
+                <input
+                  type="text"
+                  placeholder="Your Name (e.g. Priya Sharma)"
+                  value={custName}
+                  onChange={e => setCustName(e.target.value)}
+                  className="w-full rounded-xl border border-rose-200 px-3 py-1.5 text-xs text-choco outline-none focus:border-rose"
+                />
+                <input
+                  type="text"
+                  placeholder="Phone Number (e.g. 98125-42172)"
+                  value={custPhone}
+                  onChange={e => setCustPhone(e.target.value)}
+                  className="w-full rounded-xl border border-rose-200 px-3 py-1.5 text-xs text-choco outline-none focus:border-rose"
+                />
+                <input
+                  type="text"
+                  placeholder="Address / Sector in Kaithal or Hansi"
+                  value={custAddress}
+                  onChange={e => setCustAddress(e.target.value)}
+                  className="w-full rounded-xl border border-rose-200 px-3 py-1.5 text-xs text-choco outline-none focus:border-rose"
+                />
+              </div>
             </div>
             <div className="border-t border-rose-100 bg-white px-6 py-5">
               <div className="flex justify-between text-sm"><span className="text-choco/60">Subtotal</span><span className="font-bold text-choco">{inr(cartTotal)}</span></div>
               <div className="mt-1 flex justify-between text-sm"><span className="text-choco/60">Delivery</span><span className="font-semibold text-emerald-600">{cartTotal >= freeAbove ? 'FREE' : inr(49)}</span></div>
               <div className="mt-3 flex justify-between border-t border-dashed border-rose-200 pt-3 text-base font-bold text-choco"><span>Total</span><span>{inr(cartTotal + (cartTotal >= freeAbove ? 0 : 49))}</span></div>
-              <button onClick={placeOrder} className="btn-anim btn-rose mt-4 flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-semibold"><span>Place Order</span><ArrowRight size={16} /></button>
+              <button onClick={handleCheckout} className="btn-anim btn-rose mt-4 flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-semibold"><span>Place Order</span><ArrowRight size={16} /></button>
               <p className="mt-2.5 text-center text-[11px] text-choco/50">100% Eggless • Freshly Baked • Safe & On-Time Delivery</p>
             </div>
           </>
@@ -181,13 +239,21 @@ export function CartDrawer() {
 
 /* ---------------- Custom Order popup ---------------- */
 export function CustomOrderModal() {
-  const { customOpen, setCustomOpen, showToast } = useShop();
+  const { customOpen, setCustomOpen, showToast, recordCustomOrder } = useShop();
   const [sent, setSent] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', occasion: 'Birthday', date: '', flavour: 'Chocolate', weight: '1 kg', note: '' });
   useEffect(() => { if (customOpen) setSent(false); }, [customOpen]);
   if (!customOpen) return null;
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
   const inputCls = 'w-full rounded-xl border border-rose-200 bg-white px-3.5 py-2.5 text-[13px] text-choco placeholder:text-choco/35 transition';
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    recordCustomOrder(form);
+    setSent(true);
+    showToast('Custom order request sent!');
+  };
+
   return (
     <Overlay onClose={() => setCustomOpen(false)}>
       <CloseBtn onClose={() => setCustomOpen(false)} />
@@ -204,7 +270,7 @@ export function CustomOrderModal() {
           <p className="flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.28em] text-rose"><Sparkles size={13} /> CUSTOM ORDERS</p>
           <h3 className="mt-1 font-serif text-[26px] font-bold text-choco">A Cake Made Just for You</h3>
           <p className="mt-1 text-xs text-choco/60">Tell us your dream cake — we will bake it fresh, 100% eggless.</p>
-          <form className="mt-5 grid grid-cols-2 gap-3" onSubmit={e => { e.preventDefault(); setSent(true); showToast('Custom order request sent!'); }}>
+          <form className="mt-5 grid grid-cols-2 gap-3" onSubmit={handleSubmit}>
             <input required placeholder="Your name" className={inputCls} value={form.name} onChange={e => set('name', e.target.value)} />
             <input required placeholder="Phone number" className={inputCls} value={form.phone} onChange={e => set('phone', e.target.value)} />
             <select className={inputCls} value={form.occasion} onChange={e => set('occasion', e.target.value)}>{['Birthday', 'Anniversary', 'Wedding', 'Baby Shower', 'Corporate', 'Festive', 'Just Because'].map(o => <option key={o}>{o}</option>)}</select>
@@ -223,9 +289,9 @@ export function CustomOrderModal() {
 
 /* ---------------- Search popup ---------------- */
 export function SearchModal() {
-  const { searchOpen, setSearchOpen, setQuickView } = useShop();
+  const { searchOpen, setSearchOpen, setQuickView, products } = useShop();
   const [q, setQ] = useState('');
-  const results = useMemo(() => q.trim() ? allProducts.filter(p => (p.name + p.flavour + p.category).toLowerCase().includes(q.toLowerCase())).slice(0, 6) : allProducts.slice(0, 4), [q]);
+  const results = useMemo(() => q.trim() ? products.filter(p => (p.name + p.flavour + p.category).toLowerCase().includes(q.toLowerCase())).slice(0, 6) : products.slice(0, 4), [q, products]);
   useEffect(() => { if (searchOpen) setQ(''); }, [searchOpen]);
   if (!searchOpen) return null;
   return (

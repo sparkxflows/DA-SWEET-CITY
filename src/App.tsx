@@ -7,10 +7,21 @@ import Cakes from './pages/Cakes';
 import Orders from './pages/Orders';
 import Hampers from './pages/Hampers';
 import { About, Gallery } from './pages/Extra';
+import AdminPortal from './components/AdminPortal';
 import { ShopProvider, useShop } from './store';
 
 function Shell() {
   const { page } = useShop();
+
+  if (page === 'admin') {
+    return (
+      <div className="min-h-screen bg-cream font-sans text-choco antialiased">
+        <AdminPortal />
+        <Toast />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-cream font-sans text-choco antialiased">
       <Header />

@@ -65,33 +65,76 @@ export function Logo({ light = false, center = false }: { light?: boolean; cente
 export function ProductCard({ p, compact = false }: { p: Product; compact?: boolean }) {
   const { addToCart, toggleWish, wished, setQuickView } = useShop();
   const isW = wished(p.id);
+  const isOutOfStock = p.inStock === false;
+
   return (
-    <div className="card-lift group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-[0_6px_24px_-12px_rgba(120,55,40,.18)]" onClick={() => setQuickView(p)}>
+    <div
+      className="card-lift group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-[0_6px_24px_-12px_rgba(120,55,40,.18)]"
+      onClick={() => setQuickView(p)}
+    >
       <div className="relative overflow-hidden">
-        <img src={p.img} alt={p.name} loading="lazy" className={`card-img w-full object-cover ${compact ? 'h-40' : 'h-48'}`} />
+        <img
+          src={p.img}
+          alt={p.name}
+          loading="lazy"
+          className={`card-img w-full object-cover ${compact ? 'h-40' : 'h-48'} ${
+            isOutOfStock ? 'opacity-70 grayscale' : ''
+          }`}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-choco/25 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        <span className="absolute bottom-3 left-1/2 -translate-x-1/2 translate-y-8 rounded-full bg-white/95 px-3.5 py-1.5 text-[11px] font-semibold text-choco opacity-0 shadow-lg backdrop-blur transition-all duration-400 group-hover:translate-y-0 group-hover:opacity-100">Quick View • Tap to open</span>
-        {p.tag && <span className="absolute left-3 top-3 rounded-full bg-choco/85 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white backdrop-blur">{p.tag}</span>}
+        <span className="absolute bottom-3 left-1/2 -translate-x-1/2 translate-y-8 rounded-full bg-white/95 px-3.5 py-1.5 text-[11px] font-semibold text-choco opacity-0 shadow-lg backdrop-blur transition-all duration-400 group-hover:translate-y-0 group-hover:opacity-100">
+          Quick View • Tap to open
+        </span>
+        {p.tag && (
+          <span className="absolute left-3 top-3 rounded-full bg-choco/85 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white backdrop-blur">
+            {p.tag}
+          </span>
+        )}
+        {isOutOfStock && (
+          <span className="absolute left-3 bottom-3 rounded-full bg-red-600/90 px-2.5 py-1 text-[10px] font-bold text-white shadow">
+            Out of Stock
+          </span>
+        )}
         <button
-          onClick={e => { e.stopPropagation(); toggleWish(p.id); }}
-          className={`heart-btn absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/95 text-rose shadow-md ${isW ? 'wished' : ''}`}
+          onClick={e => {
+            e.stopPropagation();
+            toggleWish(p.id);
+          }}
+          className={`heart-btn absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/95 text-rose shadow-md ${
+            isW ? 'wished' : ''
+          }`}
           aria-label="Add to wishlist"
         >
           <Heart size={15} fill={isW ? 'currentColor' : 'none'} />
         </button>
       </div>
       <div className="flex flex-1 flex-col px-4 pb-4 pt-3 text-center">
-        <h3 className="text-[15px] font-semibold text-choco transition-colors group-hover:text-rose">{compact ? (p.shortName ?? p.name) : p.name}</h3>
+        <h3 className="text-[15px] font-semibold text-choco transition-colors group-hover:text-rose">
+          {compact ? p.shortName ?? p.name : p.name}
+        </h3>
         <div className="mt-1.5 flex items-center justify-center gap-1.5">
           <Stars rating={p.rating} />
-          <span className="text-[11px] font-medium text-choco/60">{p.rating} ({p.reviews}+)</span>
+          <span className="text-[11px] font-medium text-choco/60">
+            {p.rating} ({p.reviews}+)
+          </span>
         </div>
-        <p className="mt-1.5 text-[15px] font-bold text-rose">{inr(p.price)}{p.type === 'cake' && <span className="ml-1 text-[10px] font-medium text-choco/50">/ 500g</span>}</p>
+        <p className="mt-1.5 text-[15px] font-bold text-rose">
+          {inr(p.price)}
+          {p.type === 'cake' && <span className="ml-1 text-[10px] font-medium text-choco/50">/ 500g</span>}
+        </p>
         <button
-          onClick={e => { e.stopPropagation(); addToCart(p); }}
-          className="btn-anim btn-rose mt-3 flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-semibold"
+          disabled={isOutOfStock}
+          onClick={e => {
+            e.stopPropagation();
+            if (!isOutOfStock) addToCart(p);
+          }}
+          className={`mt-3 flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-semibold transition ${
+            isOutOfStock
+              ? 'bg-rose-100/60 text-choco/40 cursor-not-allowed'
+              : 'btn-anim btn-rose'
+          }`}
         >
-          <ShoppingCart size={15} /> <span>Add to Cart</span>
+          <ShoppingCart size={15} /> <span>{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
         </button>
       </div>
     </div>

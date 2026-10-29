@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CakeSlice, ChevronDown, Funnel, Heart, Leaf, SearchX, Sparkles, Star, Truck, Wheat } from 'lucide-react';
-import { cakes, IMG } from '../data';
+import { cakes as defaultCakes, IMG } from '../data';
 import { useShop } from '../store';
 import { ProductCard, Reveal } from '../components/ui';
 
 const pillCats = ['All', 'Birthday', 'Anniversary', 'Love & Romance', 'Theme Cakes', 'Cupcakes'];
 const priceRanges = [
-  { label: 'Under ₹499', test: (p: number) => p < 499 },
-  { label: '₹500 – ₹999', test: (p: number) => p >= 500 && p <= 999 },
+  { label: 'Under ₹599', test: (p: number) => p <= 599 },
+  { label: '₹600 – ₹999', test: (p: number) => p >= 600 && p <= 999 },
   { label: '₹1000 – ₹1499', test: (p: number) => p >= 1000 && p <= 1499 },
   { label: '₹1500+', test: (p: number) => p >= 1500 },
 ];
@@ -25,7 +25,9 @@ function CheckRow({ label, checked, onChange }: { label: string; checked: boolea
 }
 
 export default function Cakes() {
-  const { go, setCustomOpen } = useShop();
+  const { go, setCustomOpen, cakes: dynamicCakes } = useShop();
+  const currentCakes = dynamicCakes.length ? dynamicCakes : defaultCakes;
+
   const [activeCat, setActiveCat] = useState('All');
   const [selPrice, setSelPrice] = useState<string[]>([]);
   const [selFlavour, setSelFlavour] = useState<string[]>([]);
@@ -42,7 +44,7 @@ export default function Cakes() {
   const toggle = (list: string[], v: string, set: (x: string[]) => void) => set(list.includes(v) ? list.filter(x => x !== v) : [...list, v]);
 
   const filtered = useMemo(() => {
-    let list = cakes.filter(p => {
+    let list = currentCakes.filter(p => {
       if (activeCat !== 'All') {
         if (activeCat === 'Cupcakes') { if (p.category !== 'Cupcakes' && !p.occasions.includes('Birthday')) return false; }
         else if (p.category !== activeCat && !p.occasions.includes(activeCat)) return false;
@@ -57,7 +59,7 @@ export default function Cakes() {
     if (sort === 'Rating: High to Low') list = [...list].sort((a, b) => b.rating - a.rating);
     if (sort === 'Most Reviewed') list = [...list].sort((a, b) => b.reviews - a.reviews);
     return list;
-  }, [activeCat, applied, sort]);
+  }, [currentCakes, activeCat, applied, sort]);
 
   const apply = () => {
     setApplied({ price: selPrice, flavour: selFlavour, occasion: selOccasion });

@@ -6,7 +6,7 @@ import { Logo } from './ui';
 const links: { label: string; page: Page }[] = [
   { label: 'Home', page: 'home' },
   { label: 'Cakes', page: 'cakes' },
-  { label: 'Custom Orders', page: 'orders' },
+  { label: 'Customer Orders', page: 'orders' },
   { label: 'Hampers', page: 'hampers' },
   { label: 'Gallery', page: 'gallery' },
   { label: 'About', page: 'about' },

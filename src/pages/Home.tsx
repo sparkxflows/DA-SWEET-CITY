@@ -1,5 +1,5 @@
 import { ArrowRight, ArrowUpRight, CakeSlice, Heart, Leaf, Truck } from 'lucide-react';
-import { cakes, IMG } from '../data';
+import { cakes as defaultCakes, IMG } from '../data';
 import { useShop } from '../store';
 import { ProductCard, Reveal, SectionTitle, Stars } from '../components/ui';
 
@@ -19,8 +19,9 @@ const features = [
 ];
 
 export default function Home() {
-  const { go, setCustomOpen, setQuickView } = useShop();
-  const truffle = cakes[0];
+  const { go, setCustomOpen, setQuickView, cakes: dynamicCakes } = useShop();
+  const currentCakes = dynamicCakes.length ? dynamicCakes : defaultCakes;
+  const truffle = currentCakes[0] || defaultCakes[0];
 
   const goCategory = (filter: string) => { localStorage.setItem('cakeCategory', filter); go('cakes'); };
 
@@ -55,15 +56,15 @@ export default function Home() {
           <div className="anim-fade-up relative">
             <p className="anim-float-slow absolute -top-3 right-6 z-20 rotate-[-4deg] font-hand text-[26px] leading-[1.05] text-choco/75 md:right-16 md:text-[30px]">Sweet<br />Moments,<br />Always <span className="text-rose">♡</span></p>
             <div className="relative overflow-hidden lg:rounded-bl-[90px]">
-              <img src={IMG.hero} alt="Chocolate Truffle Cake" className="h-[340px] w-full object-cover sm:h-[440px] lg:h-[540px]" />
+              <img src={truffle.img} alt={truffle.name} className="h-[340px] w-full object-cover sm:h-[440px] lg:h-[540px]" />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-cream/70 via-transparent to-transparent lg:from-cream" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-cream/80 to-transparent" />
             </div>
             <button onClick={() => setQuickView(truffle)} className="card-lift anim-float group absolute bottom-8 right-4 flex items-center gap-3 rounded-2xl bg-white/95 p-3 pr-3.5 text-left shadow-[0_18px_38px_-14px_rgba(61,29,18,.45)] backdrop-blur md:right-10">
-              <img src={IMG.hero} alt="Chocolate Truffle" className="h-14 w-16 rounded-xl object-cover" />
+              <img src={truffle.img} alt={truffle.name} className="h-14 w-16 rounded-xl object-cover" />
               <span>
-                <span className="block text-[13px] font-semibold text-choco">Chocolate Truffle</span>
-                <span className="mt-0.5 flex items-center gap-1.5"><Stars rating={5} size={11} /><span className="text-[11px] font-medium text-choco/60">4.9 (120+)</span></span>
+                <span className="block text-[13px] font-semibold text-choco">{truffle.shortName || truffle.name}</span>
+                <span className="mt-0.5 flex items-center gap-1.5"><Stars rating={5} size={11} /><span className="text-[11px] font-medium text-choco/60">{truffle.rating} ({truffle.reviews}+)</span></span>
               </span>
               <span className="grid h-9 w-9 place-items-center rounded-full bg-choco text-white transition-all duration-300 group-hover:rotate-[-35deg] group-hover:bg-rose"><ArrowUpRight size={17} /></span>
             </button>
@@ -109,7 +110,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <Reveal><SectionTitle eyebrow="BEST SELLERS" title="Our Most Loved Cakes" /></Reveal>
           <div className="mt-9 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {cakes.slice(0, 5).map((p, i) => (
+            {currentCakes.slice(0, 5).map((p, i) => (
               <Reveal key={p.id} delay={i * 80}><ProductCard p={p} compact /></Reveal>
             ))}
           </div>

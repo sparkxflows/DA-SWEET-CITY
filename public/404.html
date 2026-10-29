@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>DA SWEET CITY</title>
+    <script>
+      var path = window.location.pathname;
+      var repo = '/DA-SWEET-CITY';
+      if (path.startsWith(repo)) {
+        path = path.slice(repo.length);
+      }
+      var search = window.location.search;
+      var hash = window.location.hash;
+      window.location.replace(repo + '/#' + path + (search ? '?' + search : '') + hash);
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
