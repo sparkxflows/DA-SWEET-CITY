@@ -34,7 +34,12 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: |
+          npm run build
+          mkdir -p dist/admin
+          cp dist/index.html dist/admin/index.html
+          cp dist/index.html dist/404.html
+          cp -r dist/images dist/admin/images || true
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

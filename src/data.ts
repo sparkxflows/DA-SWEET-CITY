@@ -18,21 +18,17 @@ export interface Product {
 
 const px = (id: number) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=900`;
 
-const base = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL)
-  ? (import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`)
-  : './';
-
 export const IMG = {
-  hero: `${base}images/hero-home.jpg`,
-  redVelvet: `${base}images/cake-redvelvet.jpg`,
-  pineapple: `${base}images/cake-pineapple.jpg`,
-  blackForest: `${base}images/cake-blackforest.jpg`,
-  butterscotch: `${base}images/cake-butterscotch.jpg`,
-  floral: `${base}images/cake-floral.jpg`,
-  heart: `${base}images/cake-heart.jpg`,
-  theme: `${base}images/cake-theme.jpg`,
-  hamperHero: `${base}images/hamper-hero.jpg`,
-  strawberry: `${base}images/cake-strawberry.jpg`,
+  hero: './images/hero-home.jpg',
+  redVelvet: './images/cake-redvelvet.jpg',
+  pineapple: './images/cake-pineapple.jpg',
+  blackForest: './images/cake-blackforest.jpg',
+  butterscotch: './images/cake-butterscotch.jpg',
+  floral: './images/cake-floral.jpg',
+  heart: './images/cake-heart.jpg',
+  theme: './images/cake-theme.jpg',
+  hamperHero: './images/hamper-hero.jpg',
+  strawberry: './images/cake-strawberry.jpg',
   vanilla: px(36497518),
   mixFruit: px(1027811),
   fruitCake: px(9553737),

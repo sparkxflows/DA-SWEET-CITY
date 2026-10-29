@@ -73,15 +73,21 @@ interface ShopCtx {
 const Ctx = createContext<ShopCtx | null>(null);
 export const useShop = () => { const c = useContext(Ctx); if (!c) throw new Error('shop ctx'); return c; };
 
+export const isCurrentPathAdmin = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
+  const hash = window.location.hash.toLowerCase();
+  return (
+    path.endsWith('/admin') ||
+    path.includes('/admin') ||
+    hash === '#admin' ||
+    hash === '#/admin' ||
+    hash.startsWith('#admin')
+  );
+};
+
 const getInitialPage = (): Page => {
-  if (typeof window !== 'undefined') {
-    const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
-    const hash = window.location.hash.toLowerCase();
-    if (path === '/admin' || path.startsWith('/admin') || hash === '#admin') {
-      return 'admin';
-    }
-  }
-  return 'home';
+  return isCurrentPathAdmin() ? 'admin' : 'home';
 };
 
 export function ShopProvider({ children }: { children: React.ReactNode }) {
@@ -99,9 +105,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
   // Sync with browser URL navigation
   useEffect(() => {
     const handleUrlChange = () => {
-      const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
-      const hash = window.location.hash.toLowerCase();
-      if (path === '/admin' || path.startsWith('/admin') || hash === '#admin') {
+      if (isCurrentPathAdmin()) {
         setPage('admin');
       } else {
         setPage(prev => (prev === 'admin' ? 'home' : prev));
@@ -192,13 +196,15 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
   const go = useCallback((p: Page) => {
     setPage(p);
     if (typeof window !== 'undefined') {
+      const isSubpath = window.location.pathname.toLowerCase().includes('/da-sweet-city');
+      const rootPrefix = isSubpath ? '/DA-SWEET-CITY' : '';
       if (p === 'admin') {
-        if (!window.location.pathname.startsWith('/admin')) {
-          window.history.pushState(null, '', '/admin');
+        if (!isCurrentPathAdmin()) {
+          window.history.pushState(null, '', `${rootPrefix}/admin`);
         }
       } else {
-        if (window.location.pathname.startsWith('/admin') || window.location.hash === '#admin') {
-          window.history.pushState(null, '', '/');
+        if (isCurrentPathAdmin()) {
+          window.history.pushState(null, '', `${rootPrefix}/`);
         }
       }
     }
